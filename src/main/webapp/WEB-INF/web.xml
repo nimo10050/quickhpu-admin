@@ -6,7 +6,7 @@
   <!-- 加载spring容器 -->
   <context-param>
     <param-name>contextConfigLocation</param-name>
-    <param-value>classpath:spring/applicationContext-dao.xml</param-value>
+    <param-value>classpath:spring/applicationContext-*.xml</param-value>
   </context-param>
   <!-- Spring 提供的请求编码过滤器 -->
   <filter>
