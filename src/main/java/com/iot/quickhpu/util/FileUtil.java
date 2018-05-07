@@ -1,35 +1,66 @@
 package com.iot.quickhpu.util;
 
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.*;
 
 
 public class FileUtil {
 
-
-    public static String readFile(String path) throws Exception {
-        InputStream in = FileUtil.class.getClassLoader()
-                .getResourceAsStream(path);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String s = null;
-        StringBuilder sb = new StringBuilder();
-        while ((s = br.readLine()) != null) {
-            sb.append(s);
-        }
-
-        return sb.toString();
-
+    /**
+     * 判断文件是否存在
+     *
+     * @param dir
+     * @param path
+     * @return
+     */
+    public static boolean isExist(String dir, String path) {
+        File file = FileUtils.getFile(dir, path);
+        return file.exists();
     }
 
-    public static void main(String[] args) throws Exception {
-        String json = "hello world";
-        OutputStream fos=new FileOutputStream(FileUtil.class.getResource("/json/test.json").getPath());
-        BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fos));
-        br.write(json);
-        br.flush();
-        br.close();
-        String s = readFile("json/test.json");
-        System.out.println(s);
+    /**
+     * 新建文件
+     */
+
+    public static boolean newFile(String dir,String fileName) {
+        try {
+            File d = new File(dir);
+            if (!d.exists()){
+                d.mkdir();
+            }
+            File file = new File(dir,fileName);
+            return file.createNewFile();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    /**
+     * 读取文件
+     *
+     * @param path
+     * @return
+     * @throws Exception
+     */
+    public static String readFromFile(String path) throws Exception {
+
+        return FileUtils.readFileToString(new File(path));
+    }
+
+    /**
+     * 写入文件
+     *
+     * @param path
+     * @return
+     * @throws Exception
+     */
+    public static void writeToFile(String path, String json) throws Exception {
+
+        FileUtils.write(new File(path), json);
     }
 
 
