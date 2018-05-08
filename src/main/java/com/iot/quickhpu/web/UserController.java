@@ -4,6 +4,7 @@ import com.iot.quickhpu.common.HPUResult;
 import com.iot.quickhpu.common.JsonUtils;
 import com.iot.quickhpu.pojo.User;
 import com.iot.quickhpu.util.FileUtil;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,10 @@ public class UserController {
      */
     @RequestMapping(value = "list/{userId}", method = RequestMethod.GET)
     @ResponseBody
-    public HPUResult listUser(@PathVariable("userId") String id) {
+    public HPUResult listUser(@PathVariable("userId") String id, String title) {
         try {
-            String fileName = id + ".json";
-            boolean exist = FileUtil.isExist(USER_JSON_DIR_PATH, fileName);
+            String fileName = title + ".json";
+            boolean exist = FileUtil.isExist(USER_JSON_DIR_PATH + "\\" + id, fileName);
             if (exist) {
                 // 读取到json字符串
                 String json = FileUtil.readFromFile(USER_JSON_DIR_PATH + fileName);
@@ -45,7 +46,7 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new HPUResult(500, "读取用户列表失败", null);
+        return new HPUResult(500, "用户列表为空", null);
     }
 
     /**
@@ -53,17 +54,22 @@ public class UserController {
      *
      * @return
      */
-    @RequestMapping("add/{createId}")
+    @RequestMapping("add/{createId}/{title}")
     @ResponseBody
-    public HPUResult addUser(@PathVariable("createId") String id, @RequestBody User user) {
+    public HPUResult addUser(@PathVariable("createId") String id
+            , @PathVariable("title") String title
+            , @RequestBody User user) {
         try {
-            String fileName = id + ".json";
+            String fileName = title + ".json";
             // 如果文件不存在, 则新建
-            if (!FileUtil.isExist(USER_JSON_DIR_PATH, fileName)) {
-                FileUtil.newFile(USER_JSON_DIR_PATH, fileName);
+            if (!FileUtil.isExist(USER_JSON_DIR_PATH + id, fileName)) {
+                System.out.println("create  new");
+                FileUtil.newFile(USER_JSON_DIR_PATH + id, fileName);
             }
             // 如果文件存在, 从文件中读取到json字符串
-            String json = FileUtil.readFromFile(USER_JSON_DIR_PATH + fileName);
+            String json = FileUtil.readFromFile(USER_JSON_DIR_PATH + id + "\\" + fileName);
+            System.out.println(">>>>>path " +USER_JSON_DIR_PATH + id + "\\" + fileName);
+            System.out.println(">>>>>trans front " +json);
             // 转为list集合
             List<User> list = null;
             if (json != null && !"".equals(json.trim())) {
@@ -71,15 +77,17 @@ public class UserController {
             } else {
                 list = new ArrayList<>();
             }
+            System.out.println(">>>>>bianli front  " + list.size());
             for (int i = 0; i < list.size(); i++) {
                 String studentId = list.get(i).getStudentId();
                 if (studentId != null && studentId.equals(user.getStudentId())) {
+                    System.out.println(">>>>>ing  " + studentId);
                     return new HPUResult(500, "用户已存在", list);
                 }
             }
             list.add(user);
             // 重新写入文件
-            FileUtil.writeToFile(USER_JSON_DIR_PATH + fileName, JsonUtils.objectToJson(list));
+            FileUtil.writeToFile(USER_JSON_DIR_PATH + id + "\\" + fileName, JsonUtils.objectToJson(list));
             return HPUResult.ok(list);
 
         } catch (Exception e) {
@@ -157,7 +165,7 @@ public class UserController {
                     String studentId = retainUser.getStudentId();
                     if (studentId != null && studentId.equals(user.getStudentId())) {
                         // 修改信息
-                        userList.set(i,user);
+                        userList.set(i, user);
                         return HPUResult.ok(userList);
                     }
                 }
