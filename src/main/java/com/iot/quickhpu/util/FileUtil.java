@@ -28,10 +28,14 @@ public class FileUtil {
         try {
             File d = new File(dir);
             if (!d.exists()){
-                d.mkdir();
+                d.mkdirs();
             }
             File file = new File(dir,fileName);
-            return file.createNewFile();
+            if (!file.exists()){
+                file.createNewFile();
+                return true;
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
