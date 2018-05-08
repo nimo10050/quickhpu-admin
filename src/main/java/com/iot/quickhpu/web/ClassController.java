@@ -1,5 +1,6 @@
 package com.iot.quickhpu.web;
 
+import com.alibaba.druid.sql.visitor.functions.If;
 import com.iot.quickhpu.common.HPUResult;
 import com.iot.quickhpu.common.JsonUtils;
 import com.iot.quickhpu.pojo.Class;
@@ -40,8 +41,8 @@ public class ClassController {
             if (!StringUtils.isEmpty(c.getCode()) && c.getCode().equals(code)) {
                 List<Class.ClassesBean> classes = c.getClasses();
                 for (int j = 0; j < classes.size(); j++) {
-                    if (classes.get(j).getName().equals(title)){
-                        return new HPUResult(500,"班级名已被使用",null);
+                    if (classes.get(j).getName().equals(title)) {
+                        return new HPUResult(500, "班级名已被使用", null);
                     }
                 }
                 // 新建班级
@@ -68,6 +69,38 @@ public class ClassController {
         FileUtil.writeToFile(CLASS_JSON_DIR_PATH + "class.json"
                 , JsonUtils.objectToJson(objects));
         return HPUResult.ok(objects);
+    }
+
+
+    /**
+     * 获取班级列表
+     * @param code 创建id
+     * @return
+     */
+    @RequestMapping("list/{code}")
+    @ResponseBody
+    public HPUResult listClass(@PathVariable String code) {
+
+        try {
+            if (FileUtil.isExist(CLASS_JSON_DIR_PATH, "class.json")) {
+                String json = FileUtil.readFromFile(CLASS_JSON_DIR_PATH + "class.json");
+                if (!StringUtils.isEmpty(json)) {
+                    List<Class> list = JsonUtils.jsonToList(json, Class.class);
+                    for (int i = 0; i < list.size(); i++) {
+                        Class c = list.get(i);
+                        String code1 = c.getCode();
+                        if (!StringUtils.isEmpty(code1) && code1.equals(code)) {
+                            return HPUResult.ok(c.getClasses());
+                        }
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new HPUResult(500, "班级列表为空", null);
+
     }
 
 
