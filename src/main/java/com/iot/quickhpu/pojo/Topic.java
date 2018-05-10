@@ -13,17 +13,26 @@ public class Topic implements Serializable {
     private String topicId;
     private String title;
     private String content;
+    private String userId;
     private String username;
     private String date;
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
     public Topic() {
     }
 
-    public Topic(String topicId, String title, String content, String username, String date) {
+    public Topic(String topicId, String title, String content, String userId, String username, String date) {
         this.topicId = topicId;
         this.title = title;
         this.content = content;
+        this.userId = userId;
         this.username = username;
         this.date = date;
     }
@@ -74,6 +83,7 @@ public class Topic implements Serializable {
                 "topicId='" + topicId + '\'' +
                 ", title='" + title + '\'' +
                 ", content='" + content + '\'' +
+                ", userId='" + userId + '\'' +
                 ", username='" + username + '\'' +
                 ", date='" + date + '\'' +
                 '}';
