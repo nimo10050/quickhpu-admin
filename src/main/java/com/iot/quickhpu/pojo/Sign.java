@@ -1,6 +1,7 @@
 package com.iot.quickhpu.pojo;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @Author: LAL
@@ -9,31 +10,88 @@ import java.io.Serializable;
  */
 public class Sign implements Serializable {
 
-    private String userId;
-    private String name;
-    private String status;
 
-    public String getUserId() {
-        return userId;
+    /**
+     * group : [{"status":"1","studentId":"1234","username":"zhangsan"},{"status":"1","studentId":"6666","username":"lisi"}]
+     * signId : 404
+     * title : xxx
+     * total : 80
+     */
+
+    private String signId;
+    private String title;
+    private String total;
+    private List<GroupBean> group;
+
+
+    public Sign() {
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public String getSignId() {
+        return signId;
     }
 
-    public String getName() {
-        return name;
+    public void setSignId(String signId) {
+        this.signId = signId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getTitle() {
+        return title;
     }
 
-    public String getStatus() {
-        return status;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public String getTotal() {
+        return total;
+    }
+
+    public void setTotal(String total) {
+        this.total = total;
+    }
+
+    public List<GroupBean> getGroup() {
+        return group;
+    }
+
+    public void setGroup(List<GroupBean> group) {
+        this.group = group;
+    }
+
+    public static class GroupBean {
+        /**
+         * status : 1
+         * studentId : 1234
+         * username : zhangsan
+         */
+
+        private String status;
+        private String studentId;
+        private String username;
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public String getStudentId() {
+            return studentId;
+        }
+
+        public void setStudentId(String studentId) {
+            this.studentId = studentId;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
     }
 }
