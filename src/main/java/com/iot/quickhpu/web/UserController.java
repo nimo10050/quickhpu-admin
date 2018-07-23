@@ -193,4 +193,20 @@ public class UserController {
         return HPUResult.ok();
     }
 
+    /**
+     * 登录
+     */
+    @RequestMapping(value = "login", method=RequestMethod.POST)
+    @ResponseBody
+    public HPUResult login(@RequestBody  User user){
+        System.out.println("come in>>>>>> ");
+        if ("123".equals(user.getName())){
+            return HPUResult.ok();
+        }
+        HPUResult result = new HPUResult();
+        result.setStatus(200);
+        result.setMsg("用户名或密码错误");
+        result.setData(null);
+        return result;
+    }
 }
