@@ -1,20 +1,17 @@
 package com.iot.quickhpu.web;
 
-import com.alibaba.druid.sql.visitor.functions.If;
+import com.iot.quickhpu.common.FileUtil;
 import com.iot.quickhpu.common.HPUResult;
 import com.iot.quickhpu.common.JsonUtils;
 import com.iot.quickhpu.pojo.Sign;
-import com.iot.quickhpu.util.FileUtil;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.File;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,58 +31,125 @@ public class SignController {
 
     /**
      * 创建签到课堂
-     *
-     * @param code
+     * @param sign
+     * @param code 主文件 id
      * @return
      */
     @RequestMapping("create/{code}")
     @ResponseBody
-    public HPUResult createSign(@PathVariable String code) {
+    public HPUResult createSign(@RequestBody Sign sign, @PathVariable String code) {
 
-        String fileName = code + ".json";
-        if (FileUtil.isExist(SIGN_IN_JSON_DIR_PATH, fileName)) {
-            FileUtil.newFile(SIGN_IN_JSON_DIR_PATH, fileName);
+        try {
+            String fileName = code + ".json";
+            if (FileUtil.isExist(SIGN_IN_JSON_DIR_PATH, fileName)) {
+                FileUtil.newFile(SIGN_IN_JSON_DIR_PATH, fileName);
+            }
+            String json = FileUtil.readFromFile(SIGN_IN_JSON_DIR_PATH + fileName);
+            List<Sign> signList = JsonUtils.jsonToList(json, Sign.class);
+            if (signList == null) {
+                signList = new ArrayList<>();
+            }
+            signList.add(sign);
+            FileUtil.writeToFile(SIGN_IN_JSON_DIR_PATH + fileName,
+                    JsonUtils.objectToJson(signList));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
         return HPUResult.ok();
     }
 
     /**
-     * 加入课堂
-     *
-     * @param code
+     * 加入签到课堂
+     * @param code 邀请码
+     * @param signId 课堂码
+     * @param username 签到学生姓名
+     * @param studentId 签到学生学号
      * @return
      */
     @RequestMapping("join/{code}/{name}")
     @ResponseBody
-    public HPUResult joinSign(@PathVariable("code") String code,
-                              @PathVariable("name") String name) {
-        String fileName = code + ".json";
-        // 遍历目录
-        File file = FileUtils.getFile("C:\\hpu\\", fileName);
+    public HPUResult joinSign(@PathVariable("code") String code
+            , String signId
+            , String username
+            , String studentId
+    ) {
+        try {
 
-        // 如果不存在, 响应失败
-        if (!file.exists()) {
-            return new HPUResult(500, "输入有误", null);
+            String fileName = code + ".json";
+            boolean exist = FileUtil.isExist(SIGN_IN_JSON_DIR_PATH, fileName);
+            if (!exist) {
+                return new HPUResult(500, "签到数据库异常", null);
+            }
+            // 如果code文件存在, 读取文件
+            String json = FileUtil.readFromFile(SIGN_IN_JSON_DIR_PATH + fileName);
+            // 返回List集合
+            List<Sign> signList = JsonUtils.jsonToList(json, Sign.class);
+            // 遍历集合, 查看班级是否存在
+            for (int i = 0; i < signList.size(); i++) {
+                if (signList.get(i).getSignId().equals(signId)) {
+                    List<Sign.GroupBean> group = signList.get(i).getGroup();
+                    Sign.GroupBean bean = new Sign.GroupBean();
+                    bean.setStudentId(studentId);
+                    bean.setStatus("0");
+                    bean.setUsername(username);
+                    group.add(bean);
+                }
+            }
+            FileUtil.writeToFile(SIGN_IN_JSON_DIR_PATH + fileName, JsonUtils.objectToJson(signList));
+            return HPUResult.ok(signList);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        // 如果code文件存在, 读取文件
-        // 返回List集合
-        // 遍历集合, 查看用户是否存在
-        // 如果存在, 响应已存在
-        // 如果不存在, add 到集合
-        //
-        return null;
+        return new HPUResult(500, "签到课堂不存在", null);
     }
 
 
-    @RequestMapping("start/{name}")
+    /**
+     * 开始录入签到
+     * @param code 邀请码
+     * @param signId 签到课堂 id
+     * @param studentId 学生号
+     * @return
+     */
+    @RequestMapping("start/{code}/{signId}")
     @ResponseBody
-    public HPUResult startSign(@PathVariable String name) {
-        // 读取sign.json文件
-        //
-        return null;
+    public HPUResult startSign(@PathVariable String code,
+                               @PathVariable String signId,
+                               String studentId) {
+        try {
+            // 读取sign.json文件
+            String fileName = code + ".json";
+            boolean exist = FileUtil.isExist(SIGN_IN_JSON_DIR_PATH, fileName);
+            if (!exist) {
+                return new HPUResult(500, "签到数据库异常", null);
+            }
+            String json = FileUtil.readFromFile(SIGN_IN_JSON_DIR_PATH + fileName);
+            List<Sign> signList = JsonUtils.jsonToList(json, Sign.class);
+            for (int i = 0; i < signList.size(); i++) {
+                if (signList.get(i).getSignId().equals(signId)){
+                    List<Sign.GroupBean> group = signList.get(i).getGroup();
+                    for (int j = 0; j < group.size(); j++) {
+                        Sign.GroupBean bean = group.get(i);
+                        if (bean.getStudentId().equals(studentId)){
+                            bean.setStatus("1");
+                            return HPUResult.ok(signList);
+                        }
+                    }
+                }
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new HPUResult(500,"签到失败",null);
     }
 
+
+    /**
+     * 显示创建的签到课堂列表
+     * @param code
+     * @return
+     */
     @RequestMapping("list/{code}")
     @ResponseBody
     public HPUResult listSign(@PathVariable String code) {
