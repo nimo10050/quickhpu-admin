@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:mvc="http://www.springframework.org/schema/mvc"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
 	    http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/aop 
 		http://www.springframework.org/schema/aop/spring-aop.xsd 
@@ -16,7 +16,7 @@
         http://www.springframework.org/schema/context 
         http://www.springframework.org/schema/context/spring-context.xsd
 	    http://www.springframework.org/schema/mvc 
-        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
 
 	<!-- 注解驱动:
         替我们显示的配置了最新版的注解的处理器映射器和处理器适配器 -->
@@ -29,7 +29,7 @@
 	</mvc:annotation-driven>
 
     <!-- 引入字典资源文件 -->
-    <context:property-placeholder location="classpath:properties/resource.properties"/>
+    <context:property-placeholder location="classpath:properties/*.properties"/>
     <!-- @Controller注解扫描 -->
     <context:component-scan base-package="com.iot.quickhpu.web"></context:component-scan>
 
@@ -43,6 +43,35 @@
 		<!-- 后缀 -->
 		<property name="suffix" value=".jsp"></property>
 	</bean>
-	
+
+
+
+
+	<!--rabbitmq    启动mq 命令  rabbitmq-plugins enable rabbitmq_management-->
+
+	<!--配置connection-factory，指定连接rabbit server参数-->
+	<rabbit:connection-factory id="connectionFactory" host="${mq.host}" username="${mq.username}" password="${mq.password}" />
+
+	<!--通过指定下面的admin信息，当前producer中的exchange和queue会在rabbitmq服务器上自动生成-->
+	<rabbit:admin connection-factory="connectionFactory"/>
+
+	<!--定义queue, 可以定义多个消息队列-->
+	<rabbit:queue name="queue1" durable="true" auto-delete="false" exclusive="false"/>
+
+	<!-- 定义direct exchange，可以绑定多个 queue -->
+	<rabbit:direct-exchange name="myChange" durable="true" auto-delete="false">
+		<rabbit:bindings>
+			<rabbit:binding queue="queue1" key="hello"></rabbit:binding>
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+
+	<!--定义rabbit template用于数据的接收和发送-->
+	<rabbit:template id="mqTemplate" connection-factory="connectionFactory" exchange="myChange" />
+
+	<!-- 监听接收 -->
+	<bean id="messageReceiver" class="com.iot.quickhpu.mq.QueueDemoListenter"></bean>
+	<rabbit:listener-container connection-factory="connectionFactory">
+		<rabbit:listener queues="queue1" ref="messageReceiver"/>
+	</rabbit:listener-container>
 
 </beans>
